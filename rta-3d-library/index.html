@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RTA 3D Model Library</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        background-color: #0a0a0a;
+        color: #e2e2e2;
+      }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "vite": "https://aistudiocdn.com/vite@^7.2.4",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "express": "https://aistudiocdn.com/express@^5.1.0",
+    "path": "https://aistudiocdn.com/path@^0.12.7",
+    "multer": "https://aistudiocdn.com/multer@^2.0.2",
+    "fs": "https://aistudiocdn.com/fs@^0.0.1-security",
+    "url": "https://aistudiocdn.com/url@^0.11.4"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+    
+    <!-- 
+      HIDDEN FORM FOR NETLIFY SUPPORT 
+      This is required because React renders the form with JavaScript. 
+      Netlify bots need to see this plain HTML to know what fields to save in the database.
+    -->
+    <form name="subscription" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="form-name" />
+      <input type="text" name="fullName" />
+      <input type="email" name="email" />
+      <input type="text" name="phone" />
+      <input type="text" name="telegram" />
+      <input type="text" name="country" />
+      <input type="text" name="plan" />
+      <input type="text" name="duration" />
+      <input type="text" name="duration_text" />
+      <input type="text" name="format" />
+      <input type="checkbox" name="isRtaStudent" />
+      <!-- Calculated Dates -->
+      <input type="text" name="startDate" />
+      <input type="text" name="expiryDate" />
+      <input type="file" name="screenshot" />
+    </form>
+
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
