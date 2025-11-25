@@ -49,23 +49,63 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, se
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData(prev => ({ ...prev, screenshot: e.target.files![0] }));
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    console.log("🚀 Starting Supabase Submission...");
+
+    try {
+      // ၁။ ဖိုင် (Payment Screenshot) ကို Form ထဲကနေ တိုက်ရိုက်ယူမယ်
+      const form = event.currentTarget;
+      const fileInput = form.querySelector('input[type="file"]') as HTMLInputElement;
+      const file = fileInput?.files?.[0];
+
+      if (!file) {
+        alert("Please upload a payment screenshot!");
+        return;
+      }
+
+      // ၂။ ပုံကို Supabase Storage တင်မယ်
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('payment-proofs')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // ၃။ ပုံရဲ့ Link ကို ပြန်ယူမယ်
+      const { data: { publicUrl } } = supabase.storage
+        .from('payment-proofs')
+        .getPublicUrl(fileName);
+
+      // ၄။ Data တွေကို Table ထဲ သိမ်းမယ်
+      const { error: insertError } = await supabase
+        .from('subscriptions')
+        .insert([{
+            // formData ထဲက နာမည်တွေက Input name တွေနဲ့ တူရပါမယ်
+            user_name: formData.fullName || formData.name, 
+            phone_no: formData.phone,
+            email: formData.email,
+            telegram_username: formData.telegram,
+            plan_type: formData.plan || 'Selected Plan',
+            payment_screenshot_url: publicUrl,
+            status: 'pending'
+        }]);
+
+      if (insertError) throw insertError;
+
+      // ၅။ အောင်မြင်ကြောင်းပြမယ်
+      alert("✅ Payment Sent! We will verify and contact you on Telegram.");
+      
+      // မူရင်းအတိုင်း Dashboard ကို ဆက်သွားခိုင်းမယ် (Optional)
+      if (onSignUpSubmit) onSignUpSubmit(formData);
+
+    } catch (error: any) {
+      console.error("Error:", error);
+      alert("Something went wrong: " + error.message);
     }
   };
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    // Immediately trigger parent submit handler which switches to Dashboard
-    onSignUpSubmit(formData);
-  };
-
-
-  const selectedPlan = useMemo(() => {
-    if (!formData.plan) return null;
-    return PLANS.find(p => p.name === formData.plan) || null;
-  }, [formData.plan]);
 
   const totalPrice = useMemo(() => {
     if (!selectedPlan) return 0;
