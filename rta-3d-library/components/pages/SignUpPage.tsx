@@ -102,7 +102,6 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, se
 
       if (insertError) throw insertError;
 
-      alert("📥 Application Received! \n\nWe have received your payment screenshot. We will verify it shortly and send the access link to your Email.");
       
       // မူရင်းအတိုင်း Next Step ကို သွားမယ်
       if (onSignUpSubmit) onSignUpSubmit(formData);
