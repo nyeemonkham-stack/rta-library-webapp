@@ -91,7 +91,7 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, se
       const { error: insertError } = await supabase
         .from('subscriptions')
         .insert([{
-            user_name: formData.name || 'Unknown User',
+            user_name: formData.fullName || 'Unknown User',
             phone_no: formData.phone,
             email: formData.email,
             telegram_username: formData.telegram,
@@ -102,7 +102,7 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, se
 
       if (insertError) throw insertError;
 
-      alert("✅ Success! Check your Telegram.");
+      alert("📥 Application Received! \n\nWe have received your payment screenshot. We will verify it shortly and send the access link to your Email.");
       
       // မူရင်းအတိုင်း Next Step ကို သွားမယ်
       if (onSignUpSubmit) onSignUpSubmit(formData);
