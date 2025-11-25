@@ -91,7 +91,7 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, se
       const { error: insertError } = await supabase
         .from('subscriptions')
         .insert([{
-            user_name: formData.name,
+            user_name: formData.name || 'Unknown User',
             phone_no: formData.phone,
             email: formData.email,
             telegram_username: formData.telegram,
