@@ -5,7 +5,7 @@ import { PLANS, CURRENCY_RATES, BANK_DETAILS } from '../../constants';
 import { PricingCard } from '../ui/PricingCard';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
-
+import { supabase } from '../../supabaseClient'; // ဒါလည်း ပါရမယ်နော်
 interface SignUpPageProps {
   onSignUpSubmit: (data: SubscriptionFormData) => void;
   onNavigate: (page: 'landing') => void;
@@ -55,10 +55,63 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, se
     }
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    // Immediately trigger parent submit handler which switches to Dashboard
-    onSignUpSubmit(formData);
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); // Reload မဖြစ်အောင် တားမယ်
+    console.log("🚀 Starting Supabase Submission...");
+    setLoading(true);
+
+    try {
+      // ၁။ ဖိုင်ယူမယ်
+      const form = event.currentTarget;
+      const fileInput = form.querySelector('input[type="file"]') as HTMLInputElement;
+      const file = fileInput?.files?.[0];
+
+      if (!file) {
+        alert("Please upload a payment screenshot!");
+        setLoading(false);
+        return;
+      }
+
+      // ၂။ Upload တင်မယ်
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from('payment-proofs')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // ၃။ URL ယူမယ်
+      const { data: { publicUrl } } = supabase.storage
+        .from('payment-proofs')
+        .getPublicUrl(fileName);
+
+      // ၄။ Save လုပ်မယ်
+      const { error: insertError } = await supabase
+        .from('subscriptions')
+        .insert([{
+            user_name: formData.name,
+            phone_no: formData.phone,
+            email: formData.email,
+            telegram_username: formData.telegram,
+            plan_type: formData.plan,
+            payment_screenshot_url: publicUrl,
+            status: 'pending'
+        }]);
+
+      if (insertError) throw insertError;
+
+      alert("✅ Success! Check your Telegram.");
+      
+      // မူရင်းအတိုင်း Next Step ကို သွားမယ်
+      if (onSignUpSubmit) onSignUpSubmit(formData);
+
+    } catch (error: any) {
+      console.error("Error:", error);
+      alert("Error: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
 
