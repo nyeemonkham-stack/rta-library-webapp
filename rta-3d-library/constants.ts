@@ -55,8 +55,8 @@ export const CURRENCY_RATES = {
 };
 
 export const BANK_DETAILS = {
-  MMK: 'KBZPay: 09xxxxxxxxx (Your Name)',
-  THB: 'KBank: 000-0-00000-0 (Your Name)',
+  MMK: 'KBZPay: 09798886653 (Kyaw Kyaw Nyein)',
+  THB: 'KBank: 664-8-47412-2 (MR. KYAW KYAW NYEIN)',
 };
 
 export const TELEGRAM_CHANNELS: TelegramChannel[] = [
