@@ -5,7 +5,7 @@ import { PLANS, CURRENCY_RATES, BANK_DETAILS } from '../../constants';
 import { PricingCard } from '../ui/PricingCard';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
-import { supabase } from '../../supabaseClient'; // ဒါလည်း ပါရမယ်နော်
+import { supabase } from '../../supabaseClient'; //
 interface SignUpPageProps {
   onSignUpSubmit: (data: SubscriptionFormData) => void;
   onNavigate: (page: 'landing') => void;
@@ -405,7 +405,7 @@ const Step2PersonalInfo: React.FC<{
                             }`}
                         />
                     </div>
-                    {errors.phone && <p className="text-red-500 text-xs mt-1">Please enter a valid phone number (min 9 digits).</p>}
+                    {errors.phone && <p className="text-red-500 text-xs mt-1">Please enter a valid phone number (min 5 digits).</p>}
                 </div>
                 <div>
                     <label htmlFor="telegram" className={`block text-sm font-medium mb-1 ${errors.telegram ? 'text-red-500' : 'text-gray-300'}`}>Telegram Username</label>
