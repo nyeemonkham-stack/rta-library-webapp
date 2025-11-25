@@ -1,251 +1,139 @@
-
-import React, { useState } from 'react';
-import { supabase } from './supabaseClient';
+import { useState } from 'react';
+import { supabase } from '../supabaseClient'; 
 
 const SubscriptionPage = () => {
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
     email: '',
     telegram: '',
-    plan: '1 Year'
+    plan: '3 Months'
   });
-  const [paymentFile, setPaymentFile] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-
-  const plans = ['3 Months', '6 Months', '1 Year'];
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setPaymentFile(e.target.files[0]);
-    }
-  };
-
-  const calculateEndDate = (startDate, plan) => {
-    const date = new Date(startDate);
-    if (plan === '3 Months') {
-      date.setMonth(date.getMonth() + 3);
-    } else if (plan === '6 Months') {
-      date.setMonth(date.getMonth() + 6);
-    } else if (plan === '1 Year') {
-      date.setFullYear(date.getFullYear() + 1);
-    }
-    return date;
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
-    // 1. STOP page reload immediately
+    // 1. STOP default form submission (အရေးကြီးဆုံး)
     e.preventDefault();
-    
-    console.log("Form submission started...");
+    console.log("🚀 Starting Supabase Submission...");
     setLoading(true);
-    setErrorMsg('');
-
-    if (!paymentFile) {
-      setErrorMsg('Please upload a payment screenshot.');
-      setLoading(false);
-      return;
-    }
 
     try {
-      // --- Step A: Upload Image to Supabase Storage ---
-      const fileExt = paymentFile.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `${fileName}`;
+      // 2. Get the file from the form directly
+      const fileInput = e.target.querySelector('input[type="file"]');
+      const file = fileInput?.files[0];
 
-      console.log("Uploading file:", filePath);
+      if (!file) {
+        alert("Please upload a payment screenshot!");
+        setLoading(false);
+        return;
+      }
 
-      // Upload directly using SDK
+      // 3. Upload Image to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('payment-proofs')
-        .upload(filePath, paymentFile);
+        .upload(fileName, file);
 
-      if (uploadError) {
-        console.error('Supabase Upload Error:', uploadError);
-        throw new Error('Image upload failed: ' + uploadError.message);
-      }
+      if (uploadError) throw uploadError;
 
-      console.log('File uploaded successfully:', uploadData);
-
-      // --- Step B: Get Public URL ---
-      const { data: urlData } = supabase.storage
+      // 4. Get Public URL
+      const { data: { publicUrl } } = supabase.storage
         .from('payment-proofs')
-        .getPublicUrl(filePath);
-      
-      const publicUrl = urlData.publicUrl;
-      console.log('Public URL generated:', publicUrl);
+        .getPublicUrl(fileName);
 
-      // --- Step C: Insert Data into Database ---
-      const startDate = new Date();
-      const endDate = calculateEndDate(startDate, formData.plan);
+      console.log("Image Uploaded:", publicUrl);
 
-      const dbPayload = {
-        full_name: formData.fullName,
-        phone: formData.phone,
-        email: formData.email,
-        telegram_username: formData.telegram,
-        plan_duration: formData.plan,
-        payment_proof_url: publicUrl,
-        start_date: startDate.toISOString(),
-        end_date: endDate.toISOString(),
-        status: 'pending'
-      };
-
-      console.log('Inserting data into table:', dbPayload);
-
-      const { data: insertData, error: insertError } = await supabase
+      // 5. Save Data to Table
+      const { error: insertError } = await supabase
         .from('subscriptions')
-        .insert([dbPayload])
-        .select();
+        .insert([
+          {
+            user_name: formData.fullName,
+            phone_no: formData.phone,
+            email: formData.email,
+            telegram_username: formData.telegram,
+            plan_type: formData.plan,
+            payment_screenshot_url: publicUrl,
+            status: 'pending'
+          }
+        ]);
 
-      console.log('Supabase Insert Response:', { data: insertData, error: insertError });
+      if (insertError) throw insertError;
 
-      if (insertError) {
-        throw new Error('Database insert failed: ' + insertError.message);
-      }
-
-      // Success
-      setSubmitted(true);
+      // 6. Success!
+      alert("✅ Success! We have received your payment. We will contact you on Telegram.");
+      
+      // Optional: Clear form
+      setFormData({ fullName: '', phone: '', email: '', telegram: '', plan: '3 Months' });
+      e.target.reset();
 
     } catch (error) {
-      console.error('Submission Process Error:', error);
-      setErrorMsg(error.message || 'An unknown error occurred.');
+      console.error("❌ Error:", error.message);
+      alert("Error: " + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  if (submitted) {
-    return (
-      <div className="max-w-md mx-auto mt-10 p-6 bg-green-50 border border-green-200 rounded-lg text-center">
-        <h2 className="text-2xl font-bold text-green-700 mb-4">Success!</h2>
-        <p className="text-gray-700">
-          Your subscription request has been received. We will verify your payment and contact you on Telegram shortly.
-        </p>
-        <button 
-          onClick={() => window.location.reload()} 
-          className="mt-4 text-blue-600 underline text-sm"
-        >
-          Submit another
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-lg mx-auto mt-10 p-6 bg-white shadow-md rounded-lg text-gray-800">
-      <h1 className="text-2xl font-bold mb-6 text-center text-gray-900">New Subscription</h1>
-      
-      {errorMsg && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm">
-          {errorMsg}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
+      <div className="w-full max-w-md bg-gray-900 p-8 rounded-lg shadow-lg">
+        <h2 className="text-2xl font-bold mb-6 text-center text-red-600">Subscribe Now</h2>
         
-        {/* Full Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Full Name</label>
-          <input
-            type="text"
-            name="fullName"
-            required
-            value={formData.fullName}
-            onChange={handleChange}
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
-          />
-        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          
+          <div>
+            <label className="block text-sm mb-1">Full Name</label>
+            <input name="fullName" type="text" required onChange={handleChange}
+              className="w-full p-2 rounded bg-gray-800 border border-gray-700 focus:border-red-500 text-white" />
+          </div>
 
-        {/* Phone */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-          <input
-            type="tel"
-            name="phone"
-            required
-            value={formData.phone}
-            onChange={handleChange}
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
-          />
-        </div>
+          <div>
+            <label className="block text-sm mb-1">Phone Number</label>
+            <input name="phone" type="text" required onChange={handleChange}
+              className="w-full p-2 rounded bg-gray-800 border border-gray-700 focus:border-red-500 text-white" />
+          </div>
 
-        {/* Email */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Email Address</label>
-          <input
-            type="email"
-            name="email"
-            required
-            value={formData.email}
-            onChange={handleChange}
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
-          />
-        </div>
+          <div>
+            <label className="block text-sm mb-1">Email</label>
+            <input name="email" type="email" required onChange={handleChange}
+              className="w-full p-2 rounded bg-gray-800 border border-gray-700 focus:border-red-500 text-white" />
+          </div>
 
-        {/* Telegram */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Telegram Username</label>
-          <input
-            type="text"
-            name="telegram"
-            required
-            placeholder="@username"
-            value={formData.telegram}
-            onChange={handleChange}
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
-          />
-        </div>
+          <div>
+            <label className="block text-sm mb-1">Telegram Username</label>
+            <input name="telegram" type="text" required onChange={handleChange}
+              className="w-full p-2 rounded bg-gray-800 border border-gray-700 focus:border-red-500 text-white" />
+          </div>
 
-        {/* Plan Selection */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Select Plan</label>
-          <select
-            name="plan"
-            value={formData.plan}
-            onChange={handleChange}
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
-          >
-            {plans.map((p) => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-          </select>
-        </div>
+          <div>
+            <label className="block text-sm mb-1">Select Plan</label>
+            <select name="plan" onChange={handleChange}
+              className="w-full p-2 rounded bg-gray-800 border border-gray-700 text-white">
+              <option>3 Months</option>
+              <option>6 Months</option>
+              <option>1 Year</option>
+            </select>
+          </div>
 
-        {/* Payment Screenshot */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Payment Screenshot</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="mt-1 block w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
-              file:text-sm file:font-semibold
-              file:bg-blue-50 file:text-blue-700
-              hover:file:bg-blue-100"
-          />
-        </div>
+          <div>
+            <label className="block text-sm mb-1">Payment Screenshot</label>
+            <input type="file" accept="image/*" required
+              className="w-full p-2 bg-gray-800 text-white rounded" />
+          </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          {loading ? 'Uploading & Saving...' : 'Submit Subscription'}
-        </button>
+          <button type="submit" disabled={loading}
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">
+            {loading ? 'Sending to Supabase...' : 'Submit Payment'}
+          </button>
 
-      </form>
+        </form>
+      </div>
     </div>
   );
 };
