@@ -5,7 +5,7 @@ import { PLANS, CURRENCY_RATES, BANK_DETAILS } from '../../constants';
 import { PricingCard } from '../ui/PricingCard';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
-
+import { supabase } from '../../supabaseClient';
 interface SignUpPageProps {
   onSignUpSubmit: (data: SubscriptionFormData) => void;
   onNavigate: (page: 'landing') => void;
