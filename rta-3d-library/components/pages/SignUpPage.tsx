@@ -31,6 +31,7 @@ const BackButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
 );
 
 export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, setStep, maxStepReached, setMaxStepReached }) => {
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<SubscriptionFormData>({
     fullName: '',
     email: '',
