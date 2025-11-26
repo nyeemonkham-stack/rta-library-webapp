@@ -73,12 +73,13 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, se
         return;
       }
 
-     // ၂။ End Date ကို တွက်ချက်ခြင်း (Fixed Logic)
+     // ၂။ End Date ကို တွက်ချက်ခြင်း
       const startDate = new Date();
       const endDate = new Date(startDate);
       
-      // duration ကို စာသားအဖြစ်ပြောင်းပြီး စစ်မယ် (3, 6, 12, 1 Year အကုန်ရအောင်)
-      const durationStr = String(formData.duration || '1 Year'); 
+      // ဒီ variable နာမည်ကို 'duration' လို့ ပေးမှ အောက်မှာ သိမ်းလို့ရမှာပါ ✅
+      const duration = formData.duration || '1 Year'; 
+      const durationStr = String(duration); // စစ်ဆေးဖို့အတွက် စာသားပြောင်းမယ်
 
       if (durationStr.includes('3')) {
         endDate.setMonth(startDate.getMonth() + 3);
