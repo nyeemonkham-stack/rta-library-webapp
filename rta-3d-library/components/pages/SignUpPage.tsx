@@ -56,8 +56,8 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, se
     }
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault(); // Reload မဖြစ်အောင် တားမယ်
+ const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     console.log("🚀 Starting Supabase Submission...");
     setLoading(true);
 
@@ -73,7 +73,20 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, se
         return;
       }
 
-      // ၂။ Upload တင်မယ်
+      // ၂။ End Date ကို အလိုအလျောက် တွက်မယ် (Calculation Logic)
+      const startDate = new Date(); // ဒီနေ့
+      const endDate = new Date(startDate); // သက်တမ်းကုန်မည့်ရက် (တွက်ရန်)
+      const duration = formData.duration || '1 Year'; // Default က 1 Year
+
+      if (duration === '3 Months') {
+        endDate.setMonth(startDate.getMonth() + 3);
+      } else if (duration === '6 Months') {
+        endDate.setMonth(startDate.getMonth() + 6);
+      } else if (duration === '1 Year') {
+        endDate.setFullYear(startDate.getFullYear() + 1);
+      }
+
+      // ၃။ ပုံ Upload တင်မယ်
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
       const { error: uploadError } = await supabase.storage
@@ -82,28 +95,29 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, se
 
       if (uploadError) throw uploadError;
 
-      // ၃။ URL ယူမယ်
+      // ၄။ ပုံ Link ယူမယ်
       const { data: { publicUrl } } = supabase.storage
         .from('payment-proofs')
         .getPublicUrl(fileName);
 
-      // ၄။ Save လုပ်မယ်
+      // ၅။ Data အားလုံး (Duration + End Date အပါ) သိမ်းမယ်
       const { error: insertError } = await supabase
         .from('subscriptions')
         .insert([{
-            user_name: formData.fullName || 'Unknown User',
+            user_name: formData.name || formData.fullName || 'Unknown',
             phone_no: formData.phone,
             email: formData.email,
             telegram_username: formData.telegram,
             plan_type: formData.plan,
+            duration: duration,            // <--- Duration သိမ်းပြီ
+            end_date: endDate.toISOString(), // <--- တွက်ထားတဲ့ရက် သိမ်းပြီ
             payment_screenshot_url: publicUrl,
             status: 'pending'
         }]);
 
       if (insertError) throw insertError;
 
-      
-      // မူရင်းအတိုင်း Next Step ကို သွားမယ်
+      // Success
       if (onSignUpSubmit) onSignUpSubmit(formData);
 
     } catch (error: any) {
@@ -113,7 +127,6 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, se
       setLoading(false);
     }
   };
-
 
   const selectedPlan = useMemo(() => {
     if (!formData.plan) return null;
