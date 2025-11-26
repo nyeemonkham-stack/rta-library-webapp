@@ -94,7 +94,6 @@ const [status, setStatus] = useState(userData.status || 'pending');
   const selectedPlanDetails = useMemo(() => PLANS.find(p => p.name === userData.plan), [userData.plan]);
 
   // Check if user is approved (Supabase status)
-  const isApproved = userData.status === 'approved';
 
   const accessibleChannels = useMemo(() => {
     if (!userData || !selectedPlanDetails) return [];
