@@ -1,4 +1,6 @@
-import React, { useMemo } from 'react';
+// Line 1 နေရာမှာ ဒါကို အစားထိုးပါ
+import React, { useMemo, useEffect, useState } from 'react';
+import { supabase } from '../../supabaseClient';
 import { SubscriptionFormData, PlanName, SoftwareFormat, TelegramChannel, Duration } from '../../types';
 import { PLANS, TELEGRAM_CHANNELS } from '../../constants';
 import { Card } from '../ui/Card';
