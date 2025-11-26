@@ -55,7 +55,7 @@ const LibraryChannelCard: React.FC<{ channel: TelegramChannel; isUnlocked: boole
 
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({ userData }) => {
-  // 1. Status Logic (Declared ONLY HERE)
+  // 1. Status Logic
   const [status, setStatus] = useState(userData.status || 'pending');
 
   useEffect(() => {
