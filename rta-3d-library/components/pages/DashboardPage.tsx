@@ -1,4 +1,3 @@
-// Line 1 နေရာမှာ ဒါကို အစားထိုးပါ
 import React, { useMemo, useEffect, useState } from 'react';
 import { supabase } from '../../supabaseClient';
 import { SubscriptionFormData, PlanName, SoftwareFormat, TelegramChannel, Duration } from '../../types';
@@ -59,6 +58,35 @@ const LibraryChannelCard: React.FC<{ channel: TelegramChannel; isUnlocked: boole
 
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({ userData }) => {
+const [status, setStatus] = useState(userData.status || 'pending');
+
+  useEffect(() => {
+    const checkStatus = async () => {
+      if (!userData.email) return;
+      
+      const { data } = await supabase
+        .from('subscriptions')
+        .select('status')
+        .eq('email', userData.email)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (data) {
+        setStatus(data.status);
+      }
+    };
+
+    // ၅ စက္ကန့်တစ်ခါ လှမ်းစစ်မယ်
+    const interval = setInterval(checkStatus, 5000);
+    return () => clearInterval(interval);
+  }, [userData.email]);
+
+  const isApproved = status === 'approved';
+  // 🔥 ဒီအထိ Copy ကူးထည့်ပါ
+
+  // အောက်က ကုဒ်အဟောင်း "const selectedPlanDetails..." က ဆက်ရှိနေရပါမယ်
+  
   const selectedPlanDetails = useMemo(() => PLANS.find(p => p.name === userData.plan), [userData.plan]);
 
   // Check if user is approved (Supabase status)
