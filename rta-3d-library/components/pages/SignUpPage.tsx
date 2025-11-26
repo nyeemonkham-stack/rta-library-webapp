@@ -55,7 +55,18 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, se
       setFormData(prev => ({ ...prev, screenshot: e.target.files![0] }));
     }
   };
-
+// Enter ခေါက်ရင် နောက်တစ်ကွက် ကူးမည့် Function
+  const handleKeyDown = (e: React.KeyboardEvent, nextFieldId?: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Back ပြန်ဆုတ်တာကို တားမယ်
+      if (nextFieldId) {
+        const nextInput = document.getElementById(nextFieldId);
+        nextInput?.focus(); // နောက်အကွက်ကို ရွှေ့မယ်
+      } else {
+        nextStep(); // နောက်ဆုံးအကွက်ဆိုရင် Next Step သွားမယ်
+      }
+    }
+  };
  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log("🚀 Starting Supabase Submission...");
@@ -334,7 +345,18 @@ const Step2PersonalInfo: React.FC<{
         phone: false,
         telegram: false
     });
-
+// Enter ခေါက်ရင် အောက်တစ်ကွက်ဆင်းမည့် Function
+  const handleKeyDown = (e: React.KeyboardEvent, nextFieldId?: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Back ဆုတ်တာကို တားမယ်
+      if (nextFieldId) {
+        const nextInput = document.getElementById(nextFieldId);
+        nextInput?.focus(); // နောက်အကွက်ကို ရွှေ့မယ်
+      } else {
+        validateAndProceed(); // နောက်ဆုံးအကွက်ဆိုရင် Next နှိပ်သလို လုပ်မယ်
+      }
+    }
+  };
     // Validation Logic
     const validateAndProceed = () => {
         const isNameValid = formData.fullName.trim().length > 0;
@@ -378,7 +400,8 @@ const Step2PersonalInfo: React.FC<{
                         type="text" 
                         name="fullName" 
                         id="fullName" 
-                        value={formData.fullName} 
+                      onKeyDown={(e) => handleKeyDown(e, 'email')}   
+                      value={formData.fullName} 
                         onChange={handleInputChange} 
                         className={`w-full bg-white/5 rounded-md px-3 py-2 focus:ring-2 transition ${
                             errors.fullName 
@@ -394,7 +417,8 @@ const Step2PersonalInfo: React.FC<{
                         type="email" 
                         name="email" 
                         id="email" 
-                        value={formData.email} 
+                      onKeyDown={(e) => handleKeyDown(e, 'phone')}  
+                      value={formData.email} 
                         onChange={handleInputChange} 
                         className={`w-full bg-white/5 rounded-md px-3 py-2 focus:ring-2 transition ${
                             errors.email 
@@ -415,7 +439,8 @@ const Step2PersonalInfo: React.FC<{
                             name="phone" 
                             id="phone" 
                             placeholder="09xxxxxxxxx" 
-                            value={formData.phone} 
+                        onKeyDown={(e) => handleKeyDown(e, 'telegram')}
+                          value={formData.phone} 
                             onChange={handleInputChange} 
                             className={`w-full bg-white/5 rounded-md pl-10 pr-3 py-2 focus:ring-2 transition ${
                                 errors.phone 
@@ -433,7 +458,8 @@ const Step2PersonalInfo: React.FC<{
                         name="telegram" 
                         id="telegram" 
                         placeholder="@username" 
-                        value={formData.telegram} 
+                      onKeyDown={(e) => handleKeyDown(e)}  
+                      value={formData.telegram} 
                         onChange={handleInputChange}
                         className={`w-full bg-white/5 rounded-md px-3 py-2 focus:ring-2 transition ${
                             errors.telegram
