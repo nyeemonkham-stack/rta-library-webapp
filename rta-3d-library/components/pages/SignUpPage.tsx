@@ -73,11 +73,14 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, se
         return;
       }
 
-      // ၂။ End Date ကို အလိုအလျောက် တွက်မယ် (Calculation Logic)
-      const startDate = new Date(); // ဒီနေ့
-      const endDate = new Date(startDate); // သက်တမ်းကုန်မည့်ရက် (တွက်ရန်)
-      const duration = formData.duration || '1 Year'; // Default က 1 Year
+     // ၂။ End Date ကို တွက်ချက်ခြင်း (+3 Days Bonus)
+      const startDate = new Date();
+      const endDate = new Date(startDate);
+      
+      // formData.duration က "3 Months", "6 Months", "1 Year" လို့ ဝင်လာပါမယ်
+      const duration = formData.duration || '1 Year'; 
 
+      // လ/နှစ် တိုးခြင်း
       if (duration === '3 Months') {
         endDate.setMonth(startDate.getMonth() + 3);
       } else if (duration === '6 Months') {
@@ -85,6 +88,9 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, se
       } else if (duration === '1 Year') {
         endDate.setFullYear(startDate.getFullYear() + 1);
       }
+
+      // 🔥 အရေးကြီးဆုံးအချက်: ၃ ရက် အပိုထပ်ပေါင်းခြင်း (Bonus)
+      endDate.setDate(endDate.getDate() + 3);
 
       // ၃။ ပုံ Upload တင်မယ်
       const fileExt = file.name.split('.').pop();
@@ -100,7 +106,7 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, se
         .from('payment-proofs')
         .getPublicUrl(fileName);
 
-      // ၅။ Data အားလုံး (Duration + End Date အပါ) သိမ်းမယ်
+     // ၅။ Data သိမ်းမယ်
       const { error: insertError } = await supabase
         .from('subscriptions')
         .insert([{
@@ -109,8 +115,8 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, se
             email: formData.email,
             telegram_username: formData.telegram,
             plan_type: formData.plan,
-            duration: duration,            // <--- Duration သိမ်းပြီ
-            end_date: endDate.toISOString(), // <--- တွက်ထားတဲ့ရက် သိမ်းပြီ
+            duration: duration,
+            end_date: endDate.toISOString(), // <--- တွက်ထားတဲ့ရက် (+3 ရက်ပါပြီးသား)
             payment_screenshot_url: publicUrl,
             status: 'pending'
         }]);
