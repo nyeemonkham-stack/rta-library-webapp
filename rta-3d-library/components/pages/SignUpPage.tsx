@@ -73,23 +73,22 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onSignUpSubmit, step, se
         return;
       }
 
-     // ၂။ End Date ကို တွက်ချက်ခြင်း (+3 Days Bonus)
+     // ၂။ End Date ကို တွက်ချက်ခြင်း (Fixed Logic)
       const startDate = new Date();
       const endDate = new Date(startDate);
       
-      // formData.duration က "3 Months", "6 Months", "1 Year" လို့ ဝင်လာပါမယ်
-      const duration = formData.duration || '1 Year'; 
+      // duration ကို စာသားအဖြစ်ပြောင်းပြီး စစ်မယ် (3, 6, 12, 1 Year အကုန်ရအောင်)
+      const durationStr = String(formData.duration || '1 Year'); 
 
-      // လ/နှစ် တိုးခြင်း
-      if (duration === '3 Months') {
+      if (durationStr.includes('3')) {
         endDate.setMonth(startDate.getMonth() + 3);
-      } else if (duration === '6 Months') {
+      } else if (durationStr.includes('6')) {
         endDate.setMonth(startDate.getMonth() + 6);
-      } else if (duration === '1 Year') {
+      } else if (durationStr.includes('1') || durationStr.includes('12')) {
         endDate.setFullYear(startDate.getFullYear() + 1);
       }
 
-      // 🔥 အရေးကြီးဆုံးအချက်: ၃ ရက် အပိုထပ်ပေါင်းခြင်း (Bonus)
+      // 🔥 ၃ ရက် အပိုဆု ပေါင်းခြင်း
       endDate.setDate(endDate.getDate() + 3);
 
       // ၃။ ပုံ Upload တင်မယ်
