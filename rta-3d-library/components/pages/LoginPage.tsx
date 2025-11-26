@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../../supabaseClient';
-import { SubscriptionFormData } from '../../types';
+import { SubscriptionFormData, SoftwareFormat } from '../../types';
 
 interface LoginPageProps {
   onLoginSuccess: (data: SubscriptionFormData) => void;
@@ -16,7 +16,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onBack }) 
     setLoading(true);
 
     try {
-      // Supabase မှာ Email နဲ့ Phone တူတဲ့လူ ရှိလား ရှာမယ်
       const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
@@ -25,28 +24,35 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onBack }) 
         .single();
 
       if (error || !data) {
-        alert("❌ Account not found! Please check your Email and Phone Number, or Subscribe first.");
+        alert("❌ Account not found! Please check your Email and Phone Number.");
         setLoading(false);
         return;
       }
 
-      // Data တွေ့ရင် ပုံစံပြောင်းပြီး Dashboard ကို ပို့မယ်
+      // 🔥 ပြင်ဆင်ချက်များ (Fixes)
       const userData: SubscriptionFormData = {
+        // 1. Name Fix: fullName ကို map လုပ်ပေးလိုက်ပါပြီ
+        fullName: data.user_name, 
         name: data.user_name,
+
+        // 2. Links Fix: format ကို 'Both' လို့ ပေးလိုက်ရင် Link အကုန်ပေါ်ပါမယ်
+        format: SoftwareFormat.Both, 
+        
         email: data.email,
         phone: data.phone_no,
         telegram: data.telegram_username,
         plan: data.plan_type,
         duration: data.duration,
-        status: data.status, // Status အဟောင်းအတိုင်း ပြန်ယူမယ်
-        // Dummy fields (not needed for dashboard but required by type)
+        status: data.status, 
+        
+        // Dummy data required by types
         country: 'Myanmar',
         software: '3ds Max',
         paymentMethod: 'KPay',
         screenshot: null
       };
 
-      onLoginSuccess(userData); // App.tsx ကနေ Dashboard ကို ပို့ပေးလိမ့်မယ်
+      onLoginSuccess(userData); 
 
     } catch (err) {
       console.error(err);
@@ -57,11 +63,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onBack }) 
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
       <div className="w-full max-w-md bg-gray-900 p-8 rounded-lg border border-gray-800">
-        <h2 className="text-2xl font-bold text-center mb-6 text-red-600">Check Your Status</h2>
+        <h2 className="text-2xl font-bold text-center mb-6 text-red-600">Login / Check Status</h2>
         <p className="text-gray-400 text-center mb-6 text-sm">
-          Enter the Email and Phone Number you used during subscription to access your dashboard.
+          Please enter the Email and Phone Number you used during subscription.
         </p>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -72,7 +78,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onBack }) 
               required 
               value={credentials.email}
               onChange={(e) => setCredentials({...credentials, email: e.target.value})}
-              className="w-full p-3 bg-gray-800 rounded border border-gray-700 focus:border-red-500 outline-none"
+              className="w-full p-3 bg-gray-800 rounded border border-gray-700 focus:border-red-500 outline-none text-white"
               placeholder="Enter your email"
             />
           </div>
@@ -84,16 +90,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onBack }) 
               required 
               value={credentials.phone}
               onChange={(e) => setCredentials({...credentials, phone: e.target.value})}
-              className="w-full p-3 bg-gray-800 rounded border border-gray-700 focus:border-red-500 outline-none"
+              className="w-full p-3 bg-gray-800 rounded border border-gray-700 focus:border-red-500 outline-none text-white"
               placeholder="Enter your phone number"
             />
           </div>
 
           <button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded transition">
-            {loading ? 'Checking...' : 'Access Dashboard'}
+            {loading ? 'Checking...' : 'Login to Dashboard'}
           </button>
 
-          <button type="button" onClick={onBack} className="w-full text-gray-500 text-sm hover:text-white">
+          <button type="button" onClick={onBack} className="w-full text-gray-500 text-sm hover:text-white mt-4">
             Back to Home
           </button>
         </form>
