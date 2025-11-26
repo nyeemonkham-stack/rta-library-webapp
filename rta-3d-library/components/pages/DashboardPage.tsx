@@ -1,11 +1,11 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { supabase } from '../../supabaseClient';
 import { SubscriptionFormData, PlanName, SoftwareFormat, TelegramChannel, Duration } from '../../types';
 import { PLANS, TELEGRAM_CHANNELS } from '../../constants';
 import { Card } from '../ui/Card';
+import { supabase } from '../../supabaseClient';
 
 interface DashboardPageProps {
-  userData: SubscriptionFormData & { status?: string }; // Ensure status is typed
+  userData: SubscriptionFormData & { status?: string }; 
 }
 
 // 🔒 Locked Icon
@@ -18,10 +18,8 @@ const UnlockIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-400 mr-3"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
 );
 
-// Card Component (Handles both Locked and Unlocked states)
+// Card Component
 const LibraryChannelCard: React.FC<{ channel: TelegramChannel; isUnlocked: boolean }> = ({ channel, isUnlocked }) => {
-    
-    // အကယ်၍ Unlocked ဖြစ်ရင် နှိပ်လို့ရတဲ့ Link (<a> tag) အဖြစ်ပြမယ်
     if (isUnlocked) {
         return (
             <a 
@@ -41,7 +39,6 @@ const LibraryChannelCard: React.FC<{ channel: TelegramChannel; isUnlocked: boole
         );
     }
 
-    // Locked ဖြစ်နေရင် အဟောင်းအတိုင်း (နှိပ်မရ) ပြမယ်
     return (
         <div className="bg-white/5 p-4 rounded-lg border border-white/10 flex items-center justify-between opacity-50 cursor-not-allowed relative overflow-hidden">
             <div className="absolute inset-0 bg-black/20 z-10"></div>
@@ -58,15 +55,13 @@ const LibraryChannelCard: React.FC<{ channel: TelegramChannel; isUnlocked: boole
 
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({ userData }) => {
-const [status, setStatus] = useState(userData.status || 'pending');
+  // 1. Status Logic (Declared ONLY HERE)
+  const [status, setStatus] = useState(userData.status || 'pending');
 
   useEffect(() => {
     const checkStatus = async () => {
       if (!userData.email) return;
-      // 👇 ဒီစာကြောင်းလေး ထည့်ပါ (Debug 1)
-      console.log("Checking status for:", userData.email); 
       
-
       const { data } = await supabase
         .from('subscriptions')
         .select('status')
@@ -74,32 +69,25 @@ const [status, setStatus] = useState(userData.status || 'pending');
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
-// 👇 ဒီစာကြောင်းလေးလည်း ထည့်ပါ (Debug 2)
-      console.log("Supabase says:", data); 
+
       if (data) {
         setStatus(data.status);
       }
     };
 
-    // ၅ စက္ကန့်တစ်ခါ လှမ်းစစ်မယ်
     const interval = setInterval(checkStatus, 5000);
     return () => clearInterval(interval);
   }, [userData.email]);
 
   const isApproved = status === 'approved';
-  // 🔥 ဒီအထိ Copy ကူးထည့်ပါ
 
-  // အောက်က ကုဒ်အဟောင်း "const selectedPlanDetails..." က ဆက်ရှိနေရပါမယ်
-  
+  // 2. Plan Logic
   const selectedPlanDetails = useMemo(() => PLANS.find(p => p.name === userData.plan), [userData.plan]);
-
-  // Check if user is approved (Supabase status)
 
   const accessibleChannels = useMemo(() => {
     if (!userData || !selectedPlanDetails) return [];
 
     let channels = TELEGRAM_CHANNELS.filter(channel => {
-      // 1. Standard Format Logic
       if (channel.software === 'Max') {
         if(userData.format === SoftwareFormat.Both) return true;
         if(userData.format === SoftwareFormat.Max) return true;
@@ -109,19 +97,16 @@ const [status, setStatus] = useState(userData.status || 'pending');
         if(userData.format === SoftwareFormat.SketchUp) return true;
       }
       
-      // 2. Premium Texture Library
       if (channel.name === 'Premium Texture Library') {
         if (selectedPlanDetails.name === PlanName.Professional || selectedPlanDetails.name === PlanName.Premium) {
             return true;
         }
       }
 
-      // 3. Software Library
       if (channel.name === 'Software Library - Archviz') {
         if (selectedPlanDetails.name === PlanName.Premium) return true;
       }
 
-      // 4. Megascan Library
       if (channel.name === 'Megascan Library for Archviz') {
           if (userData.isRtaStudent) return true;
       }
@@ -199,7 +184,7 @@ const [status, setStatus] = useState(userData.status || 'pending');
                     <div className="pt-2">
                         <p className="text-gray-500 text-xs uppercase tracking-wider mb-1">Current Status</p>
                         
-                        {/* Status Badge Logic */}
+                        {/* Status Badge */}
                         {isApproved ? (
                             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-500/20 text-green-400 border border-green-500/30">
                                 <span className="w-2 h-2 rounded-full bg-green-400 mr-2 shadow-[0_0_8px_rgba(74,222,128,0.5)]"></span>
@@ -276,7 +261,7 @@ const [status, setStatus] = useState(userData.status || 'pending');
                 <LibraryChannelCard 
                     key={index} 
                     channel={channel} 
-                    isUnlocked={isApproved} // Pass the status here
+                    isUnlocked={isApproved} 
                 />
             ))}
         </div>
