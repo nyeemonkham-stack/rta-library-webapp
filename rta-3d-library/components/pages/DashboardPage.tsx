@@ -63,7 +63,10 @@ const [status, setStatus] = useState(userData.status || 'pending');
   useEffect(() => {
     const checkStatus = async () => {
       if (!userData.email) return;
+      // 👇 ဒီစာကြောင်းလေး ထည့်ပါ (Debug 1)
+      console.log("Checking status for:", userData.email); 
       
+
       const { data } = await supabase
         .from('subscriptions')
         .select('status')
@@ -71,7 +74,8 @@ const [status, setStatus] = useState(userData.status || 'pending');
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
-
+// 👇 ဒီစာကြောင်းလေးလည်း ထည့်ပါ (Debug 2)
+      console.log("Supabase says:", data); 
       if (data) {
         setStatus(data.status);
       }
